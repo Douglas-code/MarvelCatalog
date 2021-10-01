@@ -7,22 +7,21 @@ namespace CatalogMarvelApi.Services
 {
     public class MarvelCredentialsService
     {
-        private readonly IHashEncrypt _hashEncrypt;
+        private readonly IHashGenerator _hashGenerator;
         private readonly IConfiguration _configuration;
-        private readonly IHashDecrypt _hashDecrypt;
 
-        public MarvelCredentialsService(IHashEncrypt hashEncrypt, IConfiguration configuration, IHashDecrypt hashDecrypt)
+        public MarvelCredentialsService(IHashGenerator hashGenerator, IConfiguration configuration)
         {
-            this._hashEncrypt = hashEncrypt;
+            this._hashGenerator = hashGenerator;
             this._configuration = configuration;
-            this._hashDecrypt = hashDecrypt;
         }
 
-        public CredentialsDataTransferObject GenerateCredentials(string text)
+        public CredentialsDataTransferObject GenerateCredentials()
         {
-            string apiKey = _hashDecrypt.Decrypt(_configuration.GetSection("MarvelApi")["publicKey"]);
+            string apiKey = _configuration.GetSection("MarvelApi")["publicKey"];
             string timeStamp = DateTime.Now.ToString("yyyyMMddHHmmssffff");
-            string hash = _hashEncrypt.Encrypt(text);
+            string privateKey = _configuration.GetSection("MarvelApi")["privateKey"];
+            string hash = this._hashGenerator.Generate(timeStamp + privateKey + apiKey);
 
             return new CredentialsDataTransferObject(timeStamp, apiKey, hash);
         }
